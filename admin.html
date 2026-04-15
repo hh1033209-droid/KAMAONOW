@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>KamaoNow - Ultimate Admin Control</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+        }
+        
+        /* Login Screen */
+        .login-screen {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
+        }
+        .login-card {
+            background: white; border-radius: 30px; padding: 40px;
+            width: 90%; max-width: 380px; text-align: center;
+        }
+        .login-card input {
+            width: 100%; padding: 14px; margin: 10px 0;
+            border: 2px solid #e2e8f0; border-radius: 14px;
+        }
+        .login-card button {
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border: none; border-radius: 14px;
+            font-weight: 600; cursor: pointer;
+        }
+        
+        /* Admin Container */
+        .admin-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        /* Header */
+        .admin-header {
+            background: white; border-radius: 20px; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; flex-wrap: wrap; gap: 15px;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo i { font-size: 28px; color: #f59e0b; }
+        .logo span { font-size: 20px; font-weight: 700; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px; margin-bottom: 25px;
+        }
+        .stat-card {
+            background: white; border-radius: 16px; padding: 15px;
+            text-align: center; cursor: pointer; transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card i { font-size: 28px; margin-bottom: 8px; }
+        .stat-card h3 { font-size: 28px; font-weight: 700; }
+        .stat-card p { color: #64748b; font-size: 12px; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 20px;
+            overflow-x: auto; padding-bottom: 5px;
+        }
+        .tab-btn {
+            background: white; border: none; padding: 10px 20px;
+            border-radius: 30px; cursor: pointer; font-weight: 600;
+            white-space: nowrap;
+        }
+        .tab-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        
+        /* Panels */
+        .panel { display: none; animation: fadeIn 0.3s; }
+        .panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Cards */
+        .card {
+            background: white; border-radius: 16px; padding: 20px;
+            margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .card h3 { margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        
+        /* Forms */
+        .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+        .form-group { flex: 1; min-width: 200px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 13px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 2px solid #e2e8f0;
+            border-radius: 10px; font-size: 14px;
+        }
+        
+        /* Tables */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; font-weight: 600; }
+        
+        /* Buttons */
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+        .btn-danger { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+        .btn-success { background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+        .btn-warning { background: #f59e0b; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+        .btn-small { padding: 4px 10px; font-size: 12px; }
+        
+        /* Status Badges */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .badge-pending { background: #fef3c7; color: #d97706; }
+        .badge-approved { background: #d1fae5; color: #065f46; }
+        .badge-rejected { background: #fee2e2; color: #dc2626; }
+        .badge-active { background: #d1fae5; color: #065f46; }
+        .badge-banned { background: #fee2e2; color: #dc2626; }
+        
+        /* Modal */
+        .modal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: none;
+            justify-content: center; align-items: center; z-index: 10001;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: white; border-radius: 20px; width: 90%;
+            max-width: 500px; max-height: 90vh; overflow-y: auto;
+        }
+        .modal-header { padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; }
+        
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #1e293b; color: white; padding: 12px 20px;
+            border-radius: 12px; z-index: 10002; animation: slideIn 0.3s;
+        }
+        @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* Search */
+        .search-box { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .search-box input { flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 10px; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-container { padding: 15px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-screen">
+    <div class="login-card">
+        <i class="fas fa-crown" style="font-size: 50px; color: #667eea; margin-bottom: 15px;"></i>
+        <h2>Admin Login</h2>
+        <input type="password" id="adminPassword" placeholder="Enter Password">
+        <button onclick="verifyAdminLogin()">Login</button>
+        <small style="display: block; margin-top: 15px;">Default: admin123</small>
+    </div>
+</div>
+
+<div id="adminApp" style="display: none;">
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="logo"><i class="fas fa-crown"></i><span>KamaoNow Ultimate Control</span></div>
+            <button class="logout-btn" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card" onclick="showPanel('users')"><i class="fas fa-users" style="color:#667eea;"></i><h3 id="statUsers">0</h3><p>Total Users</p></div>
+            <div class="stat-card" onclick="showPanel('tasks')"><i class="fas fa-tasks" style="color:#10b981;"></i><h3 id="statTasks">0</h3><p>Total Tasks</p></div>
+            <div class="stat-card" onclick="showPanel('requests')"><i class="fas fa-clock" style="color:#f59e0b;"></i><h3 id="statPendingTasks">0</h3><p>Pending Tasks</p></div>
+            <div class="stat-card" onclick="showPanel('withdrawals')"><i class="fas fa-money-bill-wave" style="color:#ef4444;"></i><h3 id="statPendingWithdrawals">0</h3><p>Pending Withdrawals</p></div>
+            <div class="stat-card" onclick="showPanel('users')"><i class="fas fa-wallet" style="color:#8b5cf6;"></i><h3 id="statTotalBalance">₨ 0</h3><p>Total Balance</p></div>
+            <div class="stat-card" onclick="showPanel('referrals')"><i class="fas fa-link" style="color:#06b6d4;"></i><h3 id="statReferrals">0</h3><p>Total Referrals</p></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" id="tabs">
+            <button class="tab-btn active" data-panel="dashboard"><i class="fas fa-home"></i> Dashboard</button>
+            <button class="tab-btn" data-panel="users"><i class="fas fa-users"></i> Users</button>
+            <button class="tab-btn" data-panel="tasks"><i class="fas fa-tasks"></i> Tasks</button>
+            <button class="tab-btn" data-panel="requests"><i class="fas fa-hourglass-half"></i> Task Requests</button>
+            <button class="tab-btn" data-panel="withdrawals"><i class="fas fa-money-bill-wave"></i> Withdrawals</button>
+            <button class="tab-btn" data-panel="settings"><i class="fas fa-cog"></i> Settings</button>
+            <button class="tab-btn" data-panel="logs"><i class="fas fa-history"></i> Activity Logs</button>
+        </div>
+
+        <!-- Dashboard Panel -->
+        <div id="dashboardPanel" class="panel active">
+            <div class="card">
+                <h3><i class="fas fa-chart-line"></i> Quick Actions</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-primary" onclick="showPanel('tasks')"><i class="fas fa-plus"></i> Add Task</button>
+                    <button class="btn-success" onclick="giveBonusToAll()"><i class="fas fa-gift"></i> Give Bonus to All</button>
+                    <button class="btn-warning" onclick="sendNotificationToAll()"><i class="fas fa-bell"></i> Send Notification</button>
+                    <button class="btn-danger" onclick="backupData()"><i class="fas fa-download"></i> Backup Data</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-chart-bar"></i> Recent Activity</h3>
+                <div id="recentActivities"></div>
+            </div>
+        </div>
+
+        <!-- Users Panel -->
+        <div id="usersPanel" class="panel">
+            <div class="card">
+                <h3><i class="fas fa-users"></i> All Users</h3>
+                <div class="search-box">
+                    <input type="text" id="userSearch" placeholder="Search by name or email..." onkeyup="searchUsers()">
+                    <button class="btn-primary" onclick="exportUsersCSV()"><i class="fas fa-download"></i> Export CSV</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="usersTable">
+                        <thead><tr><th>User</th><th>Email</th><th>Balance</th><th>Tasks</th><th>Referrals</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Panel -->
+        <div id="tasksPanel" class="panel">
+            <div class="card">
+                <h3><i class="fas fa-tasks"></i> Manage Tasks</h3>
+                <button class="btn-primary" onclick="openTaskModal()" style="margin-bottom: 15px;"><i class="fas fa-plus"></i> Add New Task</button>
+                <div id="tasksList"></div>
+            </div>
+        </div>
+
+        <!-- Task Requests Panel -->
+        <div id="requestsPanel" class="panel">
+            <div class="card">
+                <h3><i class="fas fa-hourglass-half"></i> Task Completion Requests</h3>
+                <div class="search-box">
+                    <button class="filter-btn btn-primary btn-small" data-filter="all">All</button>
+                    <button class="filter-btn btn-small" data-filter="pending">Pending</button>
+                    <button class="filter-btn btn-small" data-filter="approved">Approved</button>
+                    <button class="filter-btn btn-small" data-filter="rejected">Rejected</button>
+                </div>
+                <div id="taskRequestsList"></div>
+            </div>
+        </div>
+
+        <!-- Withdrawals Panel -->
+        <div id="withdrawalsPanel" class="panel">
+            <div class="card">
+                <h3><i class="fas fa-money-bill-wave"></i> Withdrawal Requests</h3>
+                <div class="search-box">
+                    <button class="filter-btn btn-primary btn-small" data-filter="all">All</button>
+                    <button class="filter-btn btn-small" data-filter="pending">Pending</button>
+                    <button class="filter-btn btn-small" data-filter="approved">Approved</button>
+                    <button class="filter-btn btn-small" data-filter="rejected">Rejected</button>
+                </div>
+                <div id="withdrawalsList"></div>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="panel">
+            <div class="card">
+                <h3><i class="fas fa-sliders-h"></i> App Settings</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Minimum Withdrawal (₨)</label><input type="number" id="minWithdrawal" value="200"></div>
+                    <div class="form-group"><label>Daily Task Limit</label><input type="number" id="dailyTaskLimit" value="20"></div>
+                    <div class="form-group"><label>Referral Commission (%)</label><input type="number" id="referralCommission" value="15"></div>
+                    <div class="form-group"><label>Welcome Bonus (₨)</label><input type="number" id="welcomeBonus" value="100"></div>
+                </div>
+                <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-bell"></i> Notification Settings</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Email Notifications</label><select id="emailNotifications"><option value="yes">Yes</option><option value="no">No</option></select></div>
+                </div>
+                <button class="btn-primary" onclick="saveNotificationSettings()">Save</button>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> Danger Zone</h3>
+                <button class="btn-danger" onclick="resetAllData()">⚠️ Reset All Data</button>
+                <p style="margin-top: 10px; font-size: 12px; color:#ef4444;">This will delete all users, tasks, requests, and withdrawals!</p>
+            </div>
+        </div>
+
+        <!-- Activity Logs Panel -->
+        <div id="logsPanel" class="panel">
+            <div class="card">
+                <h3><i class="fas fa-history"></i> System Activity Logs</h3>
+                <div id="activityLogs"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Modal -->
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 id="modalTitle">Add New Task</h3><button class="close-modal" onclick="closeTaskModal()">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="taskEditId">
+            <div class="form-group"><label>Task Name *</label><input type="text" id="taskName" placeholder="e.g., Follow on Instagram"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Reward (₨) *</label><input type="number" id="taskReward" placeholder="50"></div>
+                <div class="form-group"><label>Icon</label><input type="text" id="taskIcon" placeholder="fa-tasks" value="fa-tasks"></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea id="taskDescription" rows="2" placeholder="Instructions..."></textarea></div>
+            <div class="form-group"><label>Offer Link / URL</label><input type="url" id="taskLink" placeholder="https://example.com/offer"></div>
+        </div>
+        <div class="modal-footer"><button class="btn-secondary" onclick="closeTaskModal()">Cancel</button><button class="btn-primary" onclick="saveTask()">Save Task</button></div>
+    </div>
+</div>
+
+<!-- User Edit Modal -->
+<div id="userEditModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Edit User</h3><button class="close-modal" onclick="closeUserEditModal()">&times;</button></div>
+        <div class="modal-body">
+            <input type="hidden" id="editUserId">
+            <div class="form-group"><label>Name</label><input type="text" id="editUserName"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="editUserEmail"></div>
+            <div class="form-group"><label>Balance (₨)</label><input type="number" id="editUserBalance"></div>
+            <div class="form-group"><label>Status</label><select id="editUserStatus"><option value="active">Active</option><option value="banned">Banned</option></select></div>
+        </div>
+        <div class="modal-footer"><button class="btn-secondary" onclick="closeUserEditModal()">Cancel</button><button class="btn-primary" onclick="saveUserEdit()">Save Changes</button></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, updateDoc, setDoc, deleteDoc, onSnapshot, addDoc, query, where, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBsny5xLAKyeFWBf1De4WKTfuNuzy5UIoA",
+        authDomain: "kamaonow-bf070.firebaseapp.com",
+        projectId: "kamaonow-bf070",
+        storageBucket: "kamaonow-bf070.firebasestorage.app",
+        messagingSenderId: "107731628902",
+        appId: "1:107731628902:web:b9d36a0698995385124ea7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let allUsers = [], allTasks = [], allTaskRequests = [], allWithdrawals = [], currentFilter = 'all', activityLogs = [];
+
+    function showToast(msg, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+        toast.style.background = type === 'success' ? '#10b981' : '#ef4444';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+        addToLog(msg, type);
+    }
+
+    function addToLog(action, type) {
+        activityLogs.unshift({ time: new Date().toLocaleString(), action, type });
+        if (activityLogs.length > 50) activityLogs.pop();
+        renderLogs();
+    }
+
+    function renderLogs() {
+        const container = document.getElementById('activityLogs');
+        if (!container) return;
+        if (activityLogs.length === 0) { container.innerHTML = '<p>No logs yet</p>'; return; }
+        container.innerHTML = activityLogs.map(log => `<div style="padding: 8px; border-bottom: 1px solid #e2e8f0;"><small style="color:#666;">${log.time}</small><div>${log.action}</div></div>`).join('');
+    }
+
+    async function loadAllData() {
+        try {
+            await Promise.all([loadUsers(), loadTasks(), loadTaskRequests(), loadWithdrawals()]);
+            updateStats();
+        } catch (error) { console.error(error); }
+    }
+
+    async function loadUsers() {
+        const snapshot = await getDocs(collection(db, 'users'));
+        allUsers = []; snapshot.forEach(doc => allUsers.push({ id: doc.id, ...doc.data() }));
+        renderUsers();
+    }
+
+    async function loadTasks() {
+        const snapshot = await getDocs(collection(db, 'tasks'));
+        allTasks = []; snapshot.forEach(doc => allTasks.push({ id: parseInt(doc.id), ...doc.data() }));
+        renderTasks();
+    }
+
+    async function loadTaskRequests() {
+        const snapshot = await getDocs(collection(db, 'task_requests'));
+        allTaskRequests = []; snapshot.forEach(doc => allTaskRequests.push({ id: doc.id, ...doc.data() }));
+        renderTaskRequests();
+    }
+
+    async function loadWithdrawals() {
+        const snapshot = await getDocs(collection(db, 'withdrawal_requests'));
+        allWithdrawals = []; snapshot.forEach(doc => allWithdrawals.push({ id: doc.id, ...doc.data() }));
+        renderWithdrawals();
+    }
+
+    function updateStats() {
+        document.getElementById('statUsers').innerText = allUsers.length;
+        document.getElementById('statTasks').innerText = allTasks.length;
+        document.getElementById('statPendingTasks').innerText = allTaskRequests.filter(r => r.status === 'pending').length;
+        document.getElementById('statPendingWithdrawals').innerText = allWithdrawals.filter(w => w.status === 'pending').length;
+        document.getElementById('statTotalBalance').innerText = `₨ ${allUsers.reduce((s, u) => s + (u.balance || 0), 0)}`;
+        document.getElementById('statReferrals').innerText = allUsers.reduce((s, u) => s + (u.referrals || 0), 0);
+    }
+
+    function renderUsers() {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+        const search = document.getElementById('userSearch')?.value.toLowerCase() || '';
+        const filtered = allUsers.filter(u => u.name?.toLowerCase().includes(search) || u.email?.toLowerCase().includes(search));
+        tbody.innerHTML = filtered.map(user => `
+            <tr>
+                <td><strong>${user.name || 'N/A'}</strong><br><small style="color:#666;">${(user.userId || user.id).slice(-8)}</small></td>
+                <td>${user.email || 'N/A'}</td>
+                <td style="color:#10b981; font-weight:bold;">₨ ${user.balance || 0}</td>
+                <td>${(user.completedTasks || []).length}</td>
+                <td>${user.referrals || 0}</td>
+                <td><span class="badge ${user.status === 'active' ? 'badge-active' : 'badge-banned'}">${user.status || 'active'}</span></td>
+                <td>
+                    <button class="btn-primary btn-small" onclick="editUser('${user.userId || user.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-success btn-small" onclick="addBalance('${user.userId || user.id}')"><i class="fas fa-plus"></i></button>
+                    <button class="btn-danger btn-small" onclick="toggleUserStatus('${user.userId || user.id}')"><i class="fas ${user.status === 'active' ? 'fa-ban' : 'fa-check'}"></i></button>
+                    <button class="btn-warning btn-small" onclick="deleteUser('${user.userId || user.id}')"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('tasksList');
+        if (!container) return;
+        if (allTasks.length === 0) { container.innerHTML = '<p>No tasks yet. Click "Add New Task".</p>'; return; }
+        container.innerHTML = allTasks.map(task => `
+            <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div><i class="fas ${task.icon || 'fa-tasks'}"></i> <strong>${task.name}</strong> - <span style="color:#10b981;">+₨ ${task.reward}</span></div>
+                    <div><span class="badge ${task.active !== false ? 'badge-active' : 'badge-banned'}">${task.active !== false ? 'Active' : 'Disabled'}</span></div>
+                </div>
+                <div style="font-size: 13px; color:#666; margin-top: 8px;">${task.description || ''}</div>
+                ${task.link ? `<div style="font-size: 11px; color:#667eea; margin-top: 5px;"><i class="fas fa-link"></i> ${task.link}</div>` : ''}
+                <div style="margin-top: 10px; display: flex; gap: 8px;">
+                    <button class="btn-primary btn-small" onclick="editTask(${task.id})">Edit</button>
+                    <button class="btn-warning btn-small" onclick="toggleTaskStatus(${task.id})">${task.active !== false ? 'Disable' : 'Enable'}</button>
+                    <button class="btn-danger btn-small" onclick="deleteTask(${task.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderTaskRequests() {
+        const container = document.getElementById('taskRequestsList');
+        if (!container) return;
+        let filtered = currentFilter !== 'all' ? allTaskRequests.filter(r => r.status === currentFilter) : allTaskRequests;
+        if (filtered.length === 0) { container.innerHTML = '<p>No task requests found.</p>'; return; }
+        container.innerHTML = filtered.map(req => `
+            <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                    <div><strong>${req.userName || req.userId}</strong> - ${req.taskName}</div>
+                    <div><span class="badge badge-${req.status}">${req.status}</span></div>
+                </div>
+                <div style="margin-top: 8px;">Reward: <strong>₨ ${req.reward}</strong></div>
+                ${req.proof ? `<div style="margin-top: 5px;"><a href="${req.proof}" target="_blank" style="color:#667eea;">View Proof</a></div>` : ''}
+                ${req.status === 'pending' ? `
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <button class="btn-success btn-small" onclick="approveTask('${req.id}', ${req.reward}, ${req.taskId}, '${req.userId}')">Approve</button>
+                        <button class="btn-danger btn-small" onclick="rejectTask('${req.id}')">Reject</button>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    function renderWithdrawals() {
+        const container = document.getElementById('withdrawalsList');
+        if (!container) return;
+        let filtered = currentFilter !== 'all' ? allWithdrawals.filter(w => w.status === currentFilter) : allWithdrawals;
+        if (filtered.length === 0) { container.innerHTML = '<p>No withdrawal requests found.</p>'; return; }
+        container.innerHTML = filtered.map(wd => `
+            <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
+                <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                    <div><strong>${wd.userName || wd.userId}</strong> - ₨ ${wd.amount}</div>
+                    <div><span class="badge badge-${wd.status}">${wd.status}</span></div>
+                </div>
+                <div>Method: ${wd.methodDisplay || wd.method}</div>
+                <div>Account: ${wd.accountNumber}</div>
+                ${wd.status === 'pending' ? `
+                    <div style="margin-top: 10px; display: flex; gap: 8px;">
+                        <button class="btn-success btn-small" onclick="approveWithdrawal('${wd.id}', ${wd.amount}, '${wd.userId}')">Approve</button>
+                        <button class="btn-danger btn-small" onclick="rejectWithdrawal('${wd.id}', ${wd.amount}, '${wd.userId}')">Reject</button>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    // User Actions
+    window.editUser = async function(userId) {
+        const user = allUsers.find(u => (u.userId || u.id) === userId);
+        if (!user) return;
+        document.getElementById('editUserId').value = userId;
+        document.getElementById('editUserName').value = user.name || '';
+        document.getElementById('editUserEmail').value = user.email || '';
+        document.getElementById('editUserBalance').value = user.balance || 0;
+        document.getElementById('editUserStatus').value = user.status || 'active';
+        document.getElementById('userEditModal').classList.add('show');
+    }
+
+    window.closeUserEditModal = function() { document.getElementById('userEditModal').classList.remove('show'); }
+
+    window.saveUserEdit = async function() {
+        const userId = document.getElementById('editUserId').value;
+        const name = document.getElementById('editUserName').value;
+        const email = document.getElementById('editUserEmail').value;
+        const balance = parseInt(document.getElementById('editUserBalance').value);
+        const status = document.getElementById('editUserStatus').value;
+        await updateDoc(doc(db, 'users', userId), { name, email, balance, status });
+        showToast('User updated!');
+        closeUserEditModal();
+        await loadUsers();
+        updateStats();
+    }
+
+    window.deleteUser = async function(userId) {
+        if (confirm('⚠️ Delete this user permanently? This cannot be undone!')) {
+            await deleteDoc(doc(db, 'users', userId));
+            showToast('User deleted!');
+            await loadUsers();
+            updateStats();
+        }
+    }
+
+    window.addBalance = async function(userId) {
+        const amount = prompt('Enter amount to add (or negative to deduct):');
+        if (amount && !isNaN(amount)) {
+            const userRef = doc(db, 'users', userId);
+            const user = await getDoc(userRef);
+            await updateDoc(userRef, { balance: (user.data()?.balance || 0) + parseInt(amount) });
+            showToast(`Updated balance by ₨${amount}`);
+            await loadUsers(); updateStats();
+        }
+    }
+
+    window.toggleUserStatus = async function(userId) {
+        const user = allUsers.find(u => (u.userId || u.id) === userId);
+        if (!user) return;
+        const newStatus = user.status === 'active' ? 'banned' : 'active';
+        await updateDoc(doc(db, 'users', userId), { status: newStatus });
+        showToast(`User ${newStatus === 'active' ? 'activated' : 'banned'}`);
+        await loadUsers();
+    }
+
+    // Task Actions
+    window.openTaskModal = function() {
+        document.getElementById('taskModal').classList.add('show');
+        document.getElementById('modalTitle').innerText = 'Add New Task';
+        document.getElementById('taskEditId').value = '';
+        document.getElementById('taskName').value = '';
+        document.getElementById('taskReward').value = '';
+        document.getElementById('taskDescription').value = '';
+        document.getElementById('taskLink').value = '';
+        document.getElementById('taskIcon').value = 'fa-tasks';
+    }
+    window.closeTaskModal = function() { document.getElementById('taskModal').classList.remove('show'); }
+
+    window.saveTask = async function() {
+        const name = document.getElementById('taskName').value.trim();
+        const reward = parseInt(document.getElementById('taskReward').value);
+        if (!name || !reward) { showToast('Enter name and reward', 'error'); return; }
+        const taskId = Date.now();
+        await setDoc(doc(db, 'tasks', taskId.toString()), {
+            id: taskId, name, reward, description: document.getElementById('taskDescription').value,
+            link: document.getElementById('taskLink').value, icon: document.getElementById('taskIcon').value, active: true
+        });
+        showToast('Task added!'); closeTaskModal(); await loadTasks(); updateStats();
+    }
+
+    window.editTask = async function(taskId) {
+        const task = allTasks.find(t => t.id === taskId);
+        if (!task) return;
+        document.getElementById('taskModal').classList.add('show');
+        document.getElementById('modalTitle').innerText = 'Edit Task';
+        document.getElementById('taskEditId').value = task.id;
+        document.getElementById('taskName').value = task.name;
+        document.getElementById('taskReward').value = task.reward;
+        document.getElementById('taskDescription').value = task.description || '';
+        document.getElementById('taskLink').value = task.link || '';
+        document.getElementById('taskIcon').value = task.icon || 'fa-tasks';
+    }
+
+    window.deleteTask = async function(taskId) {
+        if (confirm('Delete this task?')) { await deleteDoc(doc(db, 'tasks', taskId.toString())); showToast('Deleted'); await loadTasks(); updateStats(); }
+    }
+
+    window.toggleTaskStatus = async function(taskId) {
+        const task = allTasks.find(t => t.id === taskId);
+        if (task) { await updateDoc(doc(db, 'tasks', taskId.toString()), { active: task.active === false }); showToast(`Task ${task.active === false ? 'enabled' : 'disabled'}`); await loadTasks(); }
+    }
+
+    // Request Actions
+    window.approveTask = async function(reqId, reward, taskId, userId) {
+        await updateDoc(doc(db, 'task_requests', reqId), { status: 'approved' });
+        const userRef = doc(db, 'users', userId);
+        const user = await getDoc(userRef);
+        await updateDoc(userRef, { balance: (user.data()?.balance || 0) + reward, completedTasks: [...(user.data()?.completedTasks || []), taskId] });
+        showToast('Task approved! Reward added.');
+        await loadAllData();
+    }
+
+    window.rejectTask = async function(reqId) { await updateDoc(doc(db, 'task_requests', reqId), { status: 'rejected' }); showToast('Rejected'); await loadAllData(); }
+    window.approveWithdrawal = async function(reqId) { await updateDoc(doc(db, 'withdrawal_requests', reqId), { status: 'approved' }); showToast('Approved'); await loadAllData(); }
+    window.rejectWithdrawal = async function(reqId, amount, userId) {
+        await updateDoc(doc(db, 'withdrawal_requests', reqId), { status: 'rejected' });
+        const userRef = doc(db, 'users', userId);
+        const user = await getDoc(userRef);
+        await updateDoc(userRef, { balance: (user.data()?.balance || 0) + amount });
+        showToast('Rejected, amount returned');
+        await loadAllData();
+    }
+
+    // Bulk Actions
+    window.giveBonusToAll = async function() {
+        const amount = prompt('Enter bonus amount for ALL users:');
+        if (amount && !isNaN(amount)) {
+            for (const user of allUsers) {
+                await updateDoc(doc(db, 'users', user.userId || user.id), { balance: increment(parseInt(amount)) });
+            }
+            showToast(`Gave ₨${amount} bonus to all ${allUsers.length} users!`);
+            await loadUsers(); updateStats();
+        }
+    }
+
+    window.sendNotificationToAll = function() {
+        const msg = prompt('Enter notification message:');
+        if (msg) { showToast(`Notification sent to all users: ${msg}`, 'info'); addToLog(`Sent notification: ${msg}`, 'info'); }
+    }
+
+    window.backupData = function() {
+        const data = { users: allUsers, tasks: allTasks, requests: allTaskRequests, withdrawals: allWithdrawals, date: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `kamaonow_backup_${Date.now()}.json`; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Backup downloaded!');
+    }
+
+    window.resetAllData = async function() {
+        if (confirm('⚠️ WARNING: This will delete ALL data! Type "RESET" to confirm.')) {
+            const confirmText = prompt('Type "RESET ALL" to confirm:');
+            if (confirmText === 'RESET ALL') {
+                const collections = ['users', 'tasks', 'task_requests', 'withdrawal_requests'];
+                for (const col of collections) {
+                    const snapshot = await getDocs(collection(db, col));
+                    for (const docSnap of snapshot.docs) { await deleteDoc(doc(db, col, docSnap.id)); }
+                }
+                showToast('All data reset!'); setTimeout(() => location.reload(), 2000);
+            }
+        }
+    }
+
+    window.exportUsersCSV = function() {
+        let csv = 'Name,Email,Balance,Tasks Completed,Referrals,Status\n';
+        allUsers.forEach(u => { csv += `"${u.name || ''}","${u.email || ''}",${u.balance || 0},${(u.completedTasks || []).length},${u.referrals || 0},${u.status || 'active'}\n`; });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `users_${Date.now()}.csv`; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Users exported!');
+    }
+
+    window.searchUsers = function() { renderUsers(); }
+
+    // Settings
+    window.saveSettings = async function() {
+        const settings = {
+            minWithdrawal: parseInt(document.getElementById('minWithdrawal').value),
+            dailyTaskLimit: parseInt(document.getElementById('dailyTaskLimit').value),
+            referralCommission: parseInt(document.getElementById('referralCommission').value),
+            welcomeBonus: parseInt(document.getElementById('welcomeBonus').value),
+            updatedAt: new Date().toISOString()
+        };
+        await setDoc(doc(db, 'settings', 'app'), settings);
+        showToast('Settings saved!');
+    }
+
+    window.saveNotificationSettings = function() { showToast('Notification settings saved!'); }
+
+    // UI Functions
+    window.showPanel = function(panelName) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(`${panelName}Panel`).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-panel="${panelName}"]`).classList.add('active');
+    }
+
+    // Filters
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentFilter = btn.getAttribute('data-filter');
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('btn-primary'));
+            btn.classList.add('btn-primary');
+            renderTaskRequests();
+            renderWithdrawals();
+        });
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => { const panel = btn.getAttribute('data-panel'); if (panel) showPanel(panel); });
+    });
+
+    // Login
+    window.verifyAdminLogin = function() {
+        const pwd = document.getElementById('adminPassword').value;
+        if (pwd === 'admin123') {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminApp').style.display = 'block';
+            loadAllData();
+            onSnapshot(collection(db, 'users'), () => loadAllData());
+            onSnapshot(collection(db, 'tasks'), () => loadAllData());
+            onSnapshot(collection(db, 'task_requests'), () => loadAllData());
+            onSnapshot(collection(db, 'withdrawal_requests'), () => loadAllData());
+            addToLog('Admin logged in', 'info');
+        } else { showToast('Wrong password!', 'error'); }
+    }
+    window.logoutAdmin = function() {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('adminApp').style.display = 'none';
+        document.getElementById('adminPassword').value = '';
+        addToLog('Admin logged out', 'info');
+    }
+
+    console.log('✅ Ultimate Admin Panel Ready!');
+</script>
+</body>
+</html>
